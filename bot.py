@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import os
+import sys
 
 from dotenv import load_dotenv
 from telebot.async_telebot import AsyncTeleBot
@@ -19,7 +20,7 @@ from utils import get_file
 load_dotenv()
 bot_token = os.getenv('TOKEN')
 bot = AsyncTeleBot(bot_token)
-user_data = {}  # Cловарь для отслеживания передвижения пользователя
+user_data = dict()  # Cловарь для отслеживания передвижения пользователя
 
 # Настройки логирования:
 bot_dir = os.path.dirname(os.path.abspath(__file__))
@@ -91,6 +92,7 @@ async def handle_inline_buttons(call):
         text = CATEGORY_MESSAGE
         if previous_choice == main_menu:
             text = WELCOME_MESSAGE
+            del user_data[chat_id]
         await bot.edit_message_text(
             chat_id=chat_id,
             message_id=message_id,
@@ -159,10 +161,11 @@ async def handle_inline_buttons(call):
 
 
 if __name__ == '__main__':
-    while True:
-        try:
-            asyncio.run(bot.polling(non_stop=True))
-        except ApiException as api_error:
-            logging.error(f'Ошибка Telegram API: {api_error}')
-        except Exception as e:
-            logging.error(f'Необработанная ошибка: {e}')
+    try:
+        asyncio.run(bot.polling(non_stop=True))
+    except ApiException as api_error:
+        logging.error(f'Ошибка Telegram API: {api_error}')
+    except Exception as e:
+        logging.error(f'Необработанная ошибка: {e}')
+    except KeyboardInterrupt:
+        sys.exit(0)
